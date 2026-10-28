@@ -112,4 +112,24 @@ class PackageTest extends TestCase {
 		$this->assertFalse( get_option( 'pass_protect_all_select_types' ), 'The other site is clean too.' );
 		restore_current_blog();
 	}
+
+	/**
+	 * Every caption under Screenshots in the readme has an image in .wordpress-org, and the other way round.
+	 */
+	public function test_every_screenshot_caption_has_an_image() {
+		$readme = file_get_contents( dirname( __DIR__ ) . '/readme.txt' );
+		preg_match( '/== Screenshots ==\n(.*?)\n==/s', $readme, $section );
+		preg_match_all( '/^(\d+)\. /m', $section[1], $captions );
+
+		$images = array();
+		foreach ( glob( dirname( __DIR__ ) . '/.wordpress-org/screenshot-*' ) as $file ) {
+			if ( preg_match( '/screenshot-(\d+)\.(png|jpg)$/', $file, $number ) ) {
+				$images[] = $number[1];
+			}
+		}
+		sort( $images );
+
+		$this->assertNotEmpty( $captions[1] );
+		$this->assertSame( $captions[1], $images );
+	}
 }

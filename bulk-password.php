@@ -206,7 +206,7 @@ function pass_protect_all_select_types_render( $args ) {
 
 	foreach ( pass_protect_all_choosable_post_types() as $post_type => $object ) {
 		printf(
-			'<p><input type="checkbox" id="%1$s[%2$s]" name="%1$s[]" value="%2$s"%3$s /><label for="%1$s[%2$s]"> %4$s (%2$s)</label> <input type="text" name="pass_protect_all_type_passwords[%2$s]" value="%5$s" placeholder="%6$s" autocomplete="off" aria-label="%7$s" /></p>',
+			'<p><input type="checkbox" id="%1$s[%2$s]" name="%1$s[]" value="%2$s"%3$s /><label for="%1$s[%2$s]" style="display:inline-block;min-width:16em"> %4$s (%2$s)</label><input type="text" name="pass_protect_all_type_passwords[%2$s]" value="%5$s" placeholder="%6$s" autocomplete="off" aria-label="%7$s" /></p>',
 			esc_attr( $name ),
 			esc_attr( $post_type ),
 			in_array( $post_type, $selected, true ) ? ' checked="checked"' : '',
