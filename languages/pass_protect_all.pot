@@ -1,0 +1,51 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-01-16 11:08+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco - https://localise.biz/"
+
+#. Section ID
+#: bulk-password.php:53
+msgid "Bulk Password Protect Post Types Settings"
+msgstr ""
+
+#. Settings ID
+#: bulk-password.php:60
+msgid "Post Type"
+msgstr ""
+
+#: bulk-password.php:71
+msgid "Choose password for posts"
+msgstr ""
+
+#: bulk-password.php:90
+msgid ""
+"Choose one or more post types. All posts within selected will be password-"
+"protected."
+msgstr ""
+
+#: bulk-password.php:111
+msgid ""
+"Make sure to set password, otherwise posts will not be (for obvious reasons) "
+"protected."
+msgstr ""
+
+#. Name of the plugin
+msgid "Bulk Password Protect Post Types"
+msgstr ""
+
+#. Description of the plugin
+msgid ""
+"Bulk Password Protect Post Types enables you to easily password protect all "
+"posts from selected post type."
+msgstr ""
