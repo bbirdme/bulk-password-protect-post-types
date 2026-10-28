@@ -4,7 +4,7 @@
  * Plugin URI: https://wordpress.org/plugins/bulk-password-protect-post-types/
  * Description: Bulk Password Protect Post Types enables you to easily password protect all posts from selected post type.
  * Author: Bruno Kos
- * Version: 1.1.0
+ * Version: 1.2.0
  * Requires at least: 5.9
  * Requires PHP: 7.4
  * Author URI: http://bbird.me/
@@ -243,7 +243,7 @@ function pass_protect_all_pass_field_render( $args ) {
 
 /**
  * Gives a post the password of its post type, or the general one, when it belongs to one of the
- * chosen post types.
+ * chosen post types, and lets the `pass_protect_all_post_password` filter change that.
  *
  * It runs for every post a loop, a feed, a search or the REST API sets up, so the text stays hidden
  * wherever WordPress would print it. Without a password nothing is changed, so a post's own
@@ -252,16 +252,28 @@ function pass_protect_all_pass_field_render( $args ) {
  * @param WP_Post $post_object The post, passed by the `the_post` action.
  */
 function pass_protect_all_set_password( $post_object ) {
+	$post_password     = '';
 	$chosen_post_types = get_option( 'pass_protect_all_select_types' );
-	if ( ! is_array( $chosen_post_types ) || ! in_array( $post_object->post_type, $chosen_post_types, true ) ) {
-		return;
+
+	if ( is_array( $chosen_post_types ) && in_array( $post_object->post_type, $chosen_post_types, true ) ) {
+		$post_password = get_option( 'pass_protect_all_pass_field' );
+		$own_passwords = get_option( 'pass_protect_all_type_passwords' );
+		if ( is_array( $own_passwords ) && ! empty( $own_passwords[ $post_object->post_type ] ) ) {
+			$post_password = $own_passwords[ $post_object->post_type ];
+		}
 	}
 
-	$post_password = get_option( 'pass_protect_all_pass_field' );
-	$own_passwords = get_option( 'pass_protect_all_type_passwords' );
-	if ( is_array( $own_passwords ) && ! empty( $own_passwords[ $post_object->post_type ] ) ) {
-		$post_password = $own_passwords[ $post_object->post_type ];
-	}
+	/**
+	 * Filters the password a post gets.
+	 *
+	 * Return an empty string to leave the post open, for example a post of one category, or a
+	 * password to protect a post of a post type that was not chosen.
+	 *
+	 * @param string  $post_password The password of the post's post type, or the general one, or an
+	 *                               empty string for a post type that was not chosen.
+	 * @param WP_Post $post_object   The post.
+	 */
+	$post_password = apply_filters( 'pass_protect_all_post_password', $post_password, $post_object );
 
 	if ( is_string( $post_password ) && '' !== $post_password ) {
 		$post_object->post_password = $post_password;

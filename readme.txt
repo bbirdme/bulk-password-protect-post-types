@@ -4,7 +4,7 @@ Tags: password, protect, post types, custom post types, private
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -51,6 +51,16 @@ Yes. Type it in the field next to the post type. A post type without a password 
 
 The list shows post types visitors can see ("public" ones). A type that WordPress or a plugin keeps for itself, such as menu items or reusable blocks, is not offered. A type you chose with version 1.0 stays in the list.
 
+= How do I leave some posts open, for example one category? =
+
+Use the `pass_protect_all_post_password` filter. It gets the password the post would get and the post, and returns the password to use; an empty string leaves the post open. Put this in your theme's `functions.php` or in a small plugin of your own:
+
+`add_filter( 'pass_protect_all_post_password', function ( $password, $post ) {
+	return has_category( 'public-news', $post ) ? '' : $password;
+}, 10, 2 );`
+
+The filter runs for every post, also for post types you did not choose, so it can protect a single type of post too: return a password for it.
+
 = Does it work on a multisite network? =
 
 Yes, each site has its own settings. Deleting the plugin removes the settings of every site.
@@ -60,6 +70,9 @@ Yes, each site has its own settings. Deleting the plugin removes the settings of
 1. The settings page.
 
 == Changelog ==
+
+= 1.2.0 =
+* New: the `pass_protect_all_post_password` filter, to leave some posts open (for example a category) or to protect others. The FAQ has an example.
 
 = 1.1.0 =
 * New: a post type can have a password of its own.
@@ -77,6 +90,9 @@ Yes, each site has its own settings. Deleting the plugin removes the settings of
 * First stable version
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Adds a filter for exceptions, such as a category that stays open. Nothing changes unless you use it.
 
 = 1.1.0 =
 Fixes a fatal error on the settings page with PHP 8. Your settings are kept.
