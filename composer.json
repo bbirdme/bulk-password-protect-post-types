@@ -1,0 +1,26 @@
+{
+  "name": "bbirdme/bulk-password-protect-post-types",
+  "description": "Password-protect all posts of the post types you choose.",
+  "type": "wordpress-plugin",
+  "license": "GPL-3.0-or-later",
+  "require-dev": {
+    "wp-coding-standards/wpcs": "^3.4",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.2",
+    "johnpbloch/wordpress-core": "7.1.*",
+    "wp-phpunit/wp-phpunit": "7.1.*",
+    "yoast/phpunit-polyfills": "^4.0",
+    "phpunit/phpunit": "^9.6"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    },
+    "platform": {
+      "php": "7.4.33"
+    }
+  },
+  "scripts": {
+    "lint": "phpcs",
+    "test": "phpunit"
+  }
+}
