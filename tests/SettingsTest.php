@@ -35,7 +35,7 @@ class SettingsTest extends TestCase {
 	}
 
 	/**
-	 * The screen renders on PHP 8, with a checkbox for each post type.
+	 * The screen renders on PHP 8, with a checkbox for each post type, named as the admin menu names it.
 	 */
 	public function test_post_type_field_renders_a_checkbox_per_type() {
 		$html = $this->types_field();
@@ -43,7 +43,42 @@ class SettingsTest extends TestCase {
 		$this->assertStringContainsString( 'name="pass_protect_all_select_types[]"', $html );
 		$this->assertMatchesRegularExpression( '/value="post"/', $html );
 		$this->assertMatchesRegularExpression( '/value="page"/', $html );
+		$this->assertStringContainsString( 'Posts (post)', $html );
+		$this->assertStringContainsString( 'Pages (page)', $html );
 		$this->assertStringNotContainsString( 'checked', $html, 'Nothing is chosen yet.' );
+	}
+
+	/**
+	 * Only post types visitors can see are offered; WordPress's internal ones are not.
+	 */
+	public function test_internal_post_types_are_not_offered() {
+		register_post_type(
+			'book',
+			array(
+				'public' => true,
+				'labels' => array( 'name' => 'Books' ),
+			)
+		);
+		register_post_type( 'audit_log', array( 'public' => false ) );
+
+		$html = $this->types_field();
+
+		$this->assertStringContainsString( 'Books (book)', $html, 'A custom public type is offered.' );
+		foreach ( array( 'revision', 'nav_menu_item', 'wp_block', 'wp_template', 'audit_log' ) as $internal ) {
+			$this->assertStringNotContainsString( 'value="' . $internal . '"', $html );
+		}
+
+		unregister_post_type( 'book' );
+		unregister_post_type( 'audit_log' );
+	}
+
+	/**
+	 * A type chosen with version 1.0, which listed everything, stays on the screen and checked.
+	 */
+	public function test_a_chosen_internal_type_stays_listed() {
+		$this->protect( array( 'wp_block' ) );
+
+		$this->assertMatchesRegularExpression( '/value="wp_block"\s+checked="checked"/', $this->types_field() );
 	}
 
 	/**

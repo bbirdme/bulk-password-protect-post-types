@@ -134,7 +134,29 @@ function pass_protect_all_sanitize_password( $value ) {
 }
 
 /**
- * Prints a checkbox for every post type.
+ * The post types the settings screen offers: the ones visitors can see, and any that are already
+ * chosen, so a choice never disappears from the screen.
+ *
+ * @return WP_Post_Type[] Post types, by name.
+ */
+function pass_protect_all_choosable_post_types() {
+	$chosen = get_option( 'pass_protect_all_select_types' );
+	if ( ! is_array( $chosen ) ) {
+		$chosen = array();
+	}
+
+	$choosable = array();
+	foreach ( get_post_types( array(), 'objects' ) as $name => $post_type ) {
+		if ( $post_type->public || in_array( $name, $chosen, true ) ) {
+			$choosable[ $name ] = $post_type;
+		}
+	}
+
+	return $choosable;
+}
+
+/**
+ * Prints a checkbox for every post type visitors can see, with its name and its internal name.
  *
  * @param string[] $args The option's name, as add_settings_field passed it.
  */
@@ -147,13 +169,13 @@ function pass_protect_all_select_types_render( $args ) {
 
 	echo '<p>' . esc_html__( 'Choose one or more post types. All posts within selected will be password-protected.', 'bulk-password-protect-post-types' ) . '</p><br>';
 
-	foreach ( get_post_types() as $post_type ) {
+	foreach ( pass_protect_all_choosable_post_types() as $post_type => $object ) {
 		printf(
-			'<input type="checkbox" id="%1$s[%2$s]" name="%1$s[]" value="%2$s"%3$s /><label for="%1$s[%2$s]"> %4$s</label><br>',
+			'<input type="checkbox" id="%1$s[%2$s]" name="%1$s[]" value="%2$s"%3$s /><label for="%1$s[%2$s]"> %4$s (%2$s)</label><br>',
 			esc_attr( $name ),
 			esc_attr( $post_type ),
 			in_array( $post_type, $selected, true ) ? ' checked="checked"' : '',
-			esc_html( $post_type )
+			esc_html( $object->labels->name )
 		);
 	}
 }
