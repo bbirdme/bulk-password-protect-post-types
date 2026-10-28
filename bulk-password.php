@@ -1,170 +1,294 @@
 <?php
-/*
-Plugin Name: Bulk Password Protect Post Types
-Plugin URI: https://wordpress.org/plugins/bulk-password-protect-posts/
-Description: Bulk Password Protect Post Types enables you to easily password protect all posts from selected post type.
-Author: Bruno Kos
-Version: 1.0
-Author URI: http://bbird.me/
+/**
+ * Plugin Name: Bulk Password Protect Post Types
+ * Plugin URI: https://wordpress.org/plugins/bulk-password-protect-post-types/
+ * Description: Bulk Password Protect Post Types enables you to easily password protect all posts from selected post type.
+ * Author: Bruno Kos
+ * Version: 1.1.0
+ * Requires at least: 5.9
+ * Requires PHP: 7.4
+ * Author URI: http://bbird.me/
+ * Text Domain: bulk-password-protect-post-types
+ * License: GPLv3 or later
+ * License URI: http://www.gnu.org/licenses/gpl-3.0.html
+ *
+ * @package BulkPasswordProtectPostTypes
+ */
 
-Text Domain: pass_protect_all
-License: GNU General Public License v3.0
-License URI: http://www.gnu.org/licenses/gpl-3.0.html
-
-*/
-
-// Making sure to direct access to this file
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-
-function pass_protect_all_load_textdomain() { // Loads the plugin's translated strings
-  load_plugin_textdomain( 'pass_protect_all', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' ); 
+// Making sure to direct access to this file.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
 }
 
-add_action( 'init', 'pass_protect_all_load_textdomain' );
-
-// Register menu option for the plugin
-add_action( 'admin_menu', 'pass_protect_all_add_admin_menu' ); // Add extra submenus and menu options to the admin panel
+// Register menu option for the plugin.
+add_action( 'admin_menu', 'pass_protect_all_add_admin_menu' ); // Add extra submenus and menu options to the admin panel.
 add_action( 'admin_init', 'pass_protect_all_settings_init' );
 
-// Add a link to the settings page
+// Add a link to the settings page.
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'pass_protect_all_settings_link' );
+
+/**
+ * Adds a Settings link to the plugin's row on the Plugins screen.
+ *
+ * @param string[] $links The links WordPress shows for the plugin.
+ * @return string[] The links, with Settings first.
+ */
 function pass_protect_all_settings_link( $links ) {
+	$url = admin_url( 'options-general.php?page=password_protect_all_posts' );
+
 	return array_merge(
 		array(
-			'settings' => '<a href="' . get_bloginfo( 'wpurl' ) . '/wp-admin/options-general.php?page=password_protect_all_posts">Settings</a>'
+			'settings' => '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'bulk-password-protect-post-types' ) . '</a>',
 		),
 		$links
 	);
 }
 
-// Add option pages
-function pass_protect_all_add_admin_menu(  ) { 
-
-    // add_options_page is used to add an options page to the "Settings" menu
-    
-	add_options_page( 'Bulk Password Protect Settings',   // The text to be displayed in the title tags of the page when the menu is selected
-                      'Bulk Password Protect',            // The text to be used for the menu
-                      'manage_options',                   // The capability required for this menu to be displayed
-                      'password_protect_all_posts',       // The slug name to refer to this menu by 
-                      'pass_protect_all_options_page' );  // The function to be called to output the content for this page (submit code)
-
+/**
+ * Adds the settings page under Settings.
+ */
+function pass_protect_all_add_admin_menu() {
+	add_options_page(
+		__( 'Bulk Password Protect Settings', 'bulk-password-protect-post-types' ), // The title of the page.
+		__( 'Bulk Password Protect', 'bulk-password-protect-post-types' ),          // The text of the menu item.
+		'manage_options',                                                           // The capability required to see it.
+		'password_protect_all_posts',                                               // The slug of the page.
+		'pass_protect_all_options_page'                                             // Prints the page.
+	);
 }
 
-// Initialize plugin settings
-
-function pass_protect_all_settings_init(  ) { 
-
+/**
+ * Registers the plugin's settings, their section and their fields.
+ */
+function pass_protect_all_settings_init() {
 	add_settings_section(
-		'pass_protect_all_settings_section',                                    // Section ID
-		__( 'Bulk Password Protect Post Types Settings', 'pass_protect_all' ),  // Section title
-		'pass_protect_all_settings_section_callback',                           // Section content function
-		'pass_protect_all_settings_page'                                        //  The menu page on which to display this section
+		'pass_protect_all_settings_section',
+		__( 'Bulk Password Protect Post Types Settings', 'bulk-password-protect-post-types' ),
+		'pass_protect_all_settings_section_callback',
+		'pass_protect_all_settings_page'
 	);
 
-	add_settings_field( 
-		'pass_protect_all_select_types',                             // Settings ID
-		__( 'Post Type', 'pass_protect_all' ),                       // Settings title
-		'pass_protect_all_select_types_render',                      // Settings content function
-		'pass_protect_all_settings_page',                            //  The menu page on which to display this setting
-		'pass_protect_all_settings_section',                         //  Section on which to display this setting
-             array( 
-            'pass_protect_all_select_types'                          // Option ID, arguments that are passed to the $callback function.
-        )
+	add_settings_field(
+		'pass_protect_all_select_types',
+		__( 'Post Type', 'bulk-password-protect-post-types' ),
+		'pass_protect_all_select_types_render',
+		'pass_protect_all_settings_page',
+		'pass_protect_all_settings_section',
+		array( 'pass_protect_all_select_types' ) // The option's name, passed to the render function.
 	);
-    
-    	add_settings_field( 
-		'pass_protect_all_pass_field', 
-		__( 'Choose password for posts', 'pass_protect_all' ), 
-		'pass_protect_all_pass_field_render', 
-		'pass_protect_all_settings_page', 
-		'pass_protect_all_settings_section' ,
-                  array( 
-            'pass_protect_all_pass_field' // Option ID
-        )  
+
+	add_settings_field(
+		'pass_protect_all_pass_field',
+		__( 'Choose password for posts', 'bulk-password-protect-post-types' ),
+		'pass_protect_all_pass_field_render',
+		'pass_protect_all_settings_page',
+		'pass_protect_all_settings_section',
+		array( 'pass_protect_all_pass_field' )
 	);
-        
-        register_setting( 'pass_protect_all_settings_page', 'pass_protect_all_select_types' );   // A settings group name, the name of an option to sanitize and save
-        register_setting( 'pass_protect_all_settings_page', 'pass_protect_all_pass_field' );
 
-
+	register_setting(
+		'pass_protect_all_settings_page',
+		'pass_protect_all_select_types',
+		array(
+			'type'              => 'array',
+			'sanitize_callback' => 'pass_protect_all_sanitize_types',
+		)
+	);
+	register_setting(
+		'pass_protect_all_settings_page',
+		'pass_protect_all_type_passwords',
+		array(
+			'type'              => 'array',
+			'sanitize_callback' => 'pass_protect_all_sanitize_type_passwords',
+		)
+	);
+	register_setting(
+		'pass_protect_all_settings_page',
+		'pass_protect_all_pass_field',
+		array(
+			'type'              => 'string',
+			'sanitize_callback' => 'pass_protect_all_sanitize_password',
+		)
+	);
 }
 
+/**
+ * Keeps only the names of post types that exist.
+ *
+ * @param mixed $value What the settings form sent.
+ * @return string[] Post type names, in the order they were sent.
+ */
+function pass_protect_all_sanitize_types( $value ) {
+	if ( ! is_array( $value ) ) {
+		return array();
+	}
 
-
-function pass_protect_all_select_types_render($args)  { // Function which pulls post types into array and outputs as checkbox
-    
-    echo '<p>' . __( 'Choose one or more post types. All posts within selected will be password-protected.', 'pass_protect_all' ) . '</p><br>';
-    
-    
-    $options     = get_option($args[0]);
-    $pag         = pass_protect_all_select_types;
-    $post_types  = get_post_types();
-    $html        = '';
-  
-    foreach ($post_types  as $post_type) {      
-    if( is_array($options)):
-    $checked = in_array($post_type, $options) ? 'checked="checked"' : '';
-    endif;
-    $html .= sprintf( '<input type="checkbox" id="%1$s[%2$s]" name="%1$s[]" value="%2$s" %3$s />', $pag, $post_type, $checked );
-    $html .= sprintf( '<label for="%1$s[%3$s]"> %2$s</label><br>', $pag, $post_type, $post_type );
-    }
-    $html .= sprintf( '<span class="description"> %s</label>', '' );
-    echo $html;
+	return array_values( array_intersect( array_filter( $value, 'is_string' ), get_post_types() ) );
 }
 
-function pass_protect_all_pass_field_render($args) {  // Function which renders password field
-    
-    echo '<p>' . __( 'Make sure to set password, otherwise posts will not be (for obvious reasons) protected.', 'pass_protect_all' ) . '</p><br>';
-    
-   $option = get_option($args[0]);
-   echo '<input type="text" id="'. $args[0] .'" name="'. $args[0] .'" value="' . $option . '" placeholder="Password" />';
-   
+/**
+ * Trims the password to what the posts table can hold. Its characters are kept as typed, because
+ * the visitor has to type exactly the same.
+ *
+ * @param mixed $value What the settings form sent.
+ * @return string The password.
+ */
+function pass_protect_all_sanitize_password( $value ) {
+	if ( ! is_string( $value ) ) {
+		return '';
+	}
+
+	return mb_substr( trim( $value ), 0, 255 ); // wp_posts.post_password is a varchar(255).
 }
 
+/**
+ * Keeps the passwords of post types that exist, and drops the empty ones: a type without a password
+ * of its own uses the general one.
+ *
+ * @param mixed $value What the settings form sent.
+ * @return array<string, string> Password by post type name.
+ */
+function pass_protect_all_sanitize_type_passwords( $value ) {
+	if ( ! is_array( $value ) ) {
+		return array();
+	}
 
-function pass_protect_all_set_password($post_object) { //Function which sets password for chosen post types
-     
-    $chosen_post_types = get_option("pass_protect_all_select_types"); 
-    $post_password     = get_option("pass_protect_all_pass_field"); 
-     if( is_array($chosen_post_types)):
-     foreach ($chosen_post_types as $types) {
-         if ($post_object->post_type==$types) {
-		  $post_object->post_password = $post_password;
-	}   
-    }
-    endif;
+	$passwords = array();
+	foreach ( $value as $post_type => $password ) {
+		$password = pass_protect_all_sanitize_password( $password );
+		if ( '' !== $password && post_type_exists( (string) $post_type ) ) {
+			$passwords[ $post_type ] = $password;
+		}
+	}
+
+	return $passwords;
 }
-add_action('the_post', 'pass_protect_all_set_password');
 
+/**
+ * The post types the settings screen offers: the ones visitors can see, and any that are already
+ * chosen, so a choice never disappears from the screen.
+ *
+ * @return WP_Post_Type[] Post types, by name.
+ */
+function pass_protect_all_choosable_post_types() {
+	$chosen = get_option( 'pass_protect_all_select_types' );
+	if ( ! is_array( $chosen ) ) {
+		$chosen = array();
+	}
 
-function pass_protect_all_settings_section_callback(  ) { 
+	$choosable = array();
+	foreach ( get_post_types( array(), 'objects' ) as $name => $post_type ) {
+		if ( $post_type->public || in_array( $name, $chosen, true ) ) {
+			$choosable[ $name ] = $post_type;
+		}
+	}
 
-	// do nothing
-
+	return $choosable;
 }
 
-function pass_protect_all_options_page(  ) { 
+/**
+ * Prints a checkbox for every post type visitors can see, with its name and its internal name.
+ *
+ * @param string[] $args The option's name, as add_settings_field passed it.
+ */
+function pass_protect_all_select_types_render( $args ) {
+	$name     = $args[0];
+	$selected = get_option( $name );
+	if ( ! is_array( $selected ) ) {
+		$selected = array();
+	}
+	$passwords = get_option( 'pass_protect_all_type_passwords' );
+	if ( ! is_array( $passwords ) ) {
+		$passwords = array();
+	}
 
+	echo '<p>' . esc_html__( 'Choose one or more post types. All posts within selected will be password-protected. A post type can have a password of its own; without one it uses the password below.', 'bulk-password-protect-post-types' ) . '</p><br>';
+
+	foreach ( pass_protect_all_choosable_post_types() as $post_type => $object ) {
+		printf(
+			'<p><input type="checkbox" id="%1$s[%2$s]" name="%1$s[]" value="%2$s"%3$s /><label for="%1$s[%2$s]" style="display:inline-block;min-width:16em"> %4$s (%2$s)</label><input type="text" name="pass_protect_all_type_passwords[%2$s]" value="%5$s" placeholder="%6$s" autocomplete="off" aria-label="%7$s" /></p>',
+			esc_attr( $name ),
+			esc_attr( $post_type ),
+			in_array( $post_type, $selected, true ) ? ' checked="checked"' : '',
+			esc_html( $object->labels->name ),
+			esc_attr( isset( $passwords[ $post_type ] ) && is_string( $passwords[ $post_type ] ) ? $passwords[ $post_type ] : '' ),
+			esc_attr__( 'Own password (optional)', 'bulk-password-protect-post-types' ),
+			/* translators: %s: the name of a post type, such as Posts. */
+			esc_attr( sprintf( __( 'Own password for %s', 'bulk-password-protect-post-types' ), $object->labels->name ) )
+		);
+	}
+}
+
+/**
+ * Prints the password field.
+ *
+ * @param string[] $args The option's name, as add_settings_field passed it.
+ */
+function pass_protect_all_pass_field_render( $args ) {
+	$name     = $args[0];
+	$password = get_option( $name );
+	if ( ! is_string( $password ) ) {
+		$password = '';
+	}
+
+	echo '<p>' . esc_html__( 'Used for every chosen post type that has no password of its own. Make sure to set a password, otherwise posts will not be (for obvious reasons) protected.', 'bulk-password-protect-post-types' ) . '</p><br>';
+
+	printf(
+		'<input type="text" id="%1$s" name="%1$s" value="%2$s" placeholder="%3$s" autocomplete="off" />',
+		esc_attr( $name ),
+		esc_attr( $password ),
+		esc_attr__( 'Password', 'bulk-password-protect-post-types' )
+	);
+}
+
+/**
+ * Gives a post the password of its post type, or the general one, when it belongs to one of the
+ * chosen post types.
+ *
+ * It runs for every post a loop, a feed, a search or the REST API sets up, so the text stays hidden
+ * wherever WordPress would print it. Without a password nothing is changed, so a post's own
+ * password is not removed.
+ *
+ * @param WP_Post $post_object The post, passed by the `the_post` action.
+ */
+function pass_protect_all_set_password( $post_object ) {
+	$chosen_post_types = get_option( 'pass_protect_all_select_types' );
+	if ( ! is_array( $chosen_post_types ) || ! in_array( $post_object->post_type, $chosen_post_types, true ) ) {
+		return;
+	}
+
+	$post_password = get_option( 'pass_protect_all_pass_field' );
+	$own_passwords = get_option( 'pass_protect_all_type_passwords' );
+	if ( is_array( $own_passwords ) && ! empty( $own_passwords[ $post_object->post_type ] ) ) {
+		$post_password = $own_passwords[ $post_object->post_type ];
+	}
+
+	if ( is_string( $post_password ) && '' !== $post_password ) {
+		$post_object->post_password = $post_password;
+	}
+}
+add_action( 'the_post', 'pass_protect_all_set_password' );
+
+/**
+ * Prints nothing above the fields: the section has no text of its own.
+ */
+function pass_protect_all_settings_section_callback() {
+	// Nothing to explain here.
+}
+
+/**
+ * Prints the settings page.
+ */
+function pass_protect_all_options_page() {
 	?>
-	<form action='options.php' method='post'>
-
-	    <?php
-		settings_fields( 'pass_protect_all_settings_page' );       // Output nonce, action, and option_page fields for a settings page.      
-		do_settings_sections( 'pass_protect_all_settings_page' );  // Prints out all settings sections added to a particular settings page.
-		submit_button();
-		?>
-
-	</form>
+	<div class="wrap">
+		<form action='options.php' method='post'>
+			<?php
+			settings_fields( 'pass_protect_all_settings_page' );       // Output nonce, action, and option_page fields for a settings page.
+			do_settings_sections( 'pass_protect_all_settings_page' );  // Prints out all settings sections added to a particular settings page.
+			submit_button();
+			?>
+		</form>
+	</div>
 	<?php
-
-}
-
-function your_prefix_activate(){
-    register_uninstall_hook( __FILE__, 'your_prefix_uninstall' );
-}
-register_activation_hook( __FILE__, 'your_prefix_activate' );
- 
-// And here goes the uninstallation function:
-function your_prefix_uninstall(){
-    //  codes to perform during unistallation
 }

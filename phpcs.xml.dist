@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<ruleset name="Bulk Password Protect Post Types">
+	<description>Coding standards for Bulk Password Protect Post Types.</description>
+
+	<file>.</file>
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+	<exclude-pattern>/dist/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg value="sp"/>
+	<arg name="colors"/>
+
+	<rule ref="WordPress">
+		<!-- The tests are PSR-4 style classes named after what they test, as in WordPress's own suite. -->
+		<exclude name="WordPress.Files.FileName"/>
+	</rule>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="bulk-password-protect-post-types"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="pass_protect_all"/>
+				<element value="BulkPasswordProtectPostTypes"/>
+				<element value="bulk_password"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Tests read the plugin's own files and call WordPress's hooks and constants on purpose. -->
+	<rule ref="WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+</ruleset>
