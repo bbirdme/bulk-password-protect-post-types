@@ -214,4 +214,85 @@ class ProtectionTest extends TestCase {
 
 		$this->assertFalse( post_password_required() );
 	}
+
+	/**
+	 * The filter lets a site leave some posts open, such as every post of one category.
+	 */
+	public function test_filter_can_leave_a_category_open() {
+		$secret = self::factory()->post->create( array( 'post_content' => 'TOPSECRET-BODY' ) );
+		$open   = self::factory()->post->create( array( 'post_content' => 'OPEN-BODY' ) );
+		wp_set_post_categories( $open, array( self::factory()->category->create( array( 'slug' => 'public-news' ) ) ) );
+		$this->protect( array( 'post' ) );
+
+		add_filter(
+			'pass_protect_all_post_password',
+			static function ( $password, $post ) {
+				return has_category( 'public-news', $post ) ? '' : $password;
+			},
+			10,
+			2
+		);
+
+		$this->open( $secret );
+		$this->assertTrue( post_password_required() );
+
+		$this->open( $open );
+		$this->assertFalse( post_password_required(), 'The post in the category stays open.' );
+		$this->assertStringContainsString( 'OPEN-BODY', get_the_content() );
+	}
+
+	/**
+	 * The filter gets the password the settings give the post, and the post.
+	 */
+	public function test_filter_gets_the_password_of_the_settings_and_the_post() {
+		list( $post_id ) = $this->content();
+		$this->protect( array( 'post' ) );
+		$seen = array();
+		add_filter(
+			'pass_protect_all_post_password',
+			static function ( $password, $post ) use ( &$seen ) {
+				$seen[] = array( $password, $post->ID );
+				return $password;
+			},
+			10,
+			2
+		);
+
+		$this->open( $post_id );
+
+		$this->assertContains( array( self::PASSWORD, $post_id ), $seen );
+	}
+
+	/**
+	 * The filter can protect a post of a type that was not chosen, or give a post another password.
+	 */
+	public function test_filter_can_protect_other_posts_and_change_the_password() {
+		list( $post_id, $page_id ) = $this->content();
+		$this->protect( array( 'post' ) );
+		add_filter(
+			'pass_protect_all_post_password',
+			static function ( $password, $post ) use ( $page_id ) {
+				return $post->ID === $page_id ? 'for-this-page' : strrev( $password );
+			},
+			10,
+			2
+		);
+
+		$this->assertSame( strrev( self::PASSWORD ), $this->open( $post_id )->post_password );
+		$this->assertSame( 'for-this-page', $this->open( $page_id )->post_password, 'A page, although pages were not chosen.' );
+	}
+
+	/**
+	 * A filter that returns something that is not a password, such as false, protects nothing and
+	 * breaks nothing.
+	 */
+	public function test_filter_result_that_is_not_a_password_protects_nothing() {
+		list( $post_id ) = $this->content();
+		$this->protect( array( 'post' ) );
+		add_filter( 'pass_protect_all_post_password', '__return_false' );
+
+		$this->open( $post_id );
+
+		$this->assertFalse( post_password_required() );
+	}
 }
