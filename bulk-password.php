@@ -5,7 +5,7 @@
  * Description: Bulk Password Protect Post Types enables you to easily password protect all posts from selected post type.
  * Author: Bruno Kos
  * Version: 1.1.0
- * Requires at least: 6.0
+ * Requires at least: 5.9
  * Requires PHP: 7.4
  * Author URI: http://bbird.me/
  * Text Domain: bulk-password-protect-post-types

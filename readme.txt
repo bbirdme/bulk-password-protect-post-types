@@ -1,7 +1,7 @@
 === Bulk Password Protect Post Types ===
 Contributors: mckilem
 Tags: password, protect, post types, custom post types, private
-Requires at least: 6.0
+Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 1.1.0
@@ -70,7 +70,7 @@ Yes, each site has its own settings. Deleting the plugin removes the settings of
 * Security: the chosen post types and the password are sanitized when saved, and everything on the settings page is escaped.
 * The text domain is now `bulk-password-protect-post-types`, the plugin's slug, so wordpress.org translations load.
 * The Settings link on the Plugins screen follows the site's admin address.
-* Requires WordPress 6.0 and PHP 7.4. Tested with WordPress 7.1.
+* Requires WordPress 5.9 and PHP 7.4. Tested with WordPress 5.9, 6.0 and 7.1.
 * Added automated tests.
 
 = 1.0 =
