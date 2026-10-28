@@ -122,6 +122,38 @@ class SettingsTest extends TestCase {
 	}
 
 	/**
+	 * Each post type has a field for a password of its own, with what was saved, escaped.
+	 */
+	public function test_each_type_has_a_field_for_its_own_password() {
+		$this->own_passwords( array( 'page' => '"><b>x' ) );
+
+		$html = $this->types_field();
+
+		$this->assertStringContainsString( 'name="pass_protect_all_type_passwords[post]" value=""', $html );
+		$this->assertStringContainsString( 'name="pass_protect_all_type_passwords[page]" value="&quot;&gt;&lt;b&gt;x"', $html );
+		$this->assertStringContainsString( 'aria-label="Own password for Pages"', $html );
+	}
+
+	/**
+	 * Own passwords are saved for real post types only, trimmed, and empty ones are dropped.
+	 */
+	public function test_saving_cleans_the_own_passwords() {
+		update_option(
+			'pass_protect_all_type_passwords',
+			array(
+				'page'         => '  pages-only ',
+				'post'         => '',
+				'no-such-type' => 'x',
+				'attachment'   => array( 'x' ),
+			)
+		);
+		$this->assertSame( array( 'page' => 'pages-only' ), get_option( 'pass_protect_all_type_passwords' ) );
+
+		update_option( 'pass_protect_all_type_passwords', 'page' );
+		$this->assertSame( array(), get_option( 'pass_protect_all_type_passwords' ) );
+	}
+
+	/**
 	 * Only existing post types are saved, whatever the request sends.
 	 */
 	public function test_saving_keeps_only_real_post_types() {

@@ -72,10 +72,11 @@ class PackageTest extends TestCase {
 	}
 
 	/**
-	 * Deleting the plugin removes its two options and nothing else.
+	 * Deleting the plugin removes its options and nothing else.
 	 */
 	public function test_uninstall_removes_the_options() {
 		$this->protect( array( 'post' ) );
+		$this->own_passwords( array( 'page' => 'pages-only' ) );
 		update_option( 'some_other_option', 'kept' );
 
 		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
@@ -85,6 +86,30 @@ class PackageTest extends TestCase {
 
 		$this->assertFalse( get_option( 'pass_protect_all_select_types' ) );
 		$this->assertFalse( get_option( 'pass_protect_all_pass_field' ) );
+		$this->assertFalse( get_option( 'pass_protect_all_type_passwords' ) );
 		$this->assertSame( 'kept', get_option( 'some_other_option' ) );
+	}
+
+	/**
+	 * On a network, deleting the plugin cleans every site, not only the one it runs on.
+	 */
+	public function test_uninstall_cleans_every_site_of_a_network() {
+		$this->skipWithoutMultisite();
+		$other = self::factory()->blog->create();
+
+		$this->protect( array( 'post' ) );
+		switch_to_blog( $other );
+		$this->protect( array( 'page' ) );
+		restore_current_blog();
+
+		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+			define( 'WP_UNINSTALL_PLUGIN', self::SLUG . '/bulk-password.php' );
+		}
+		require dirname( __DIR__ ) . '/uninstall.php';
+
+		$this->assertFalse( get_option( 'pass_protect_all_select_types' ) );
+		switch_to_blog( $other );
+		$this->assertFalse( get_option( 'pass_protect_all_select_types' ), 'The other site is clean too.' );
+		restore_current_blog();
 	}
 }

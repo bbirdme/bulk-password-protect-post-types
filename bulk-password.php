@@ -96,6 +96,14 @@ function pass_protect_all_settings_init() {
 	);
 	register_setting(
 		'pass_protect_all_settings_page',
+		'pass_protect_all_type_passwords',
+		array(
+			'type'              => 'array',
+			'sanitize_callback' => 'pass_protect_all_sanitize_type_passwords',
+		)
+	);
+	register_setting(
+		'pass_protect_all_settings_page',
 		'pass_protect_all_pass_field',
 		array(
 			'type'              => 'string',
@@ -134,6 +142,29 @@ function pass_protect_all_sanitize_password( $value ) {
 }
 
 /**
+ * Keeps the passwords of post types that exist, and drops the empty ones: a type without a password
+ * of its own uses the general one.
+ *
+ * @param mixed $value What the settings form sent.
+ * @return array<string, string> Password by post type name.
+ */
+function pass_protect_all_sanitize_type_passwords( $value ) {
+	if ( ! is_array( $value ) ) {
+		return array();
+	}
+
+	$passwords = array();
+	foreach ( $value as $post_type => $password ) {
+		$password = pass_protect_all_sanitize_password( $password );
+		if ( '' !== $password && post_type_exists( (string) $post_type ) ) {
+			$passwords[ $post_type ] = $password;
+		}
+	}
+
+	return $passwords;
+}
+
+/**
  * The post types the settings screen offers: the ones visitors can see, and any that are already
  * chosen, so a choice never disappears from the screen.
  *
@@ -166,16 +197,24 @@ function pass_protect_all_select_types_render( $args ) {
 	if ( ! is_array( $selected ) ) {
 		$selected = array();
 	}
+	$passwords = get_option( 'pass_protect_all_type_passwords' );
+	if ( ! is_array( $passwords ) ) {
+		$passwords = array();
+	}
 
-	echo '<p>' . esc_html__( 'Choose one or more post types. All posts within selected will be password-protected.', 'bulk-password-protect-post-types' ) . '</p><br>';
+	echo '<p>' . esc_html__( 'Choose one or more post types. All posts within selected will be password-protected. A post type can have a password of its own; without one it uses the password below.', 'bulk-password-protect-post-types' ) . '</p><br>';
 
 	foreach ( pass_protect_all_choosable_post_types() as $post_type => $object ) {
 		printf(
-			'<input type="checkbox" id="%1$s[%2$s]" name="%1$s[]" value="%2$s"%3$s /><label for="%1$s[%2$s]"> %4$s (%2$s)</label><br>',
+			'<p><input type="checkbox" id="%1$s[%2$s]" name="%1$s[]" value="%2$s"%3$s /><label for="%1$s[%2$s]"> %4$s (%2$s)</label> <input type="text" name="pass_protect_all_type_passwords[%2$s]" value="%5$s" placeholder="%6$s" autocomplete="off" aria-label="%7$s" /></p>',
 			esc_attr( $name ),
 			esc_attr( $post_type ),
 			in_array( $post_type, $selected, true ) ? ' checked="checked"' : '',
-			esc_html( $object->labels->name )
+			esc_html( $object->labels->name ),
+			esc_attr( isset( $passwords[ $post_type ] ) && is_string( $passwords[ $post_type ] ) ? $passwords[ $post_type ] : '' ),
+			esc_attr__( 'Own password (optional)', 'bulk-password-protect-post-types' ),
+			/* translators: %s: the name of a post type, such as Posts. */
+			esc_attr( sprintf( __( 'Own password for %s', 'bulk-password-protect-post-types' ), $object->labels->name ) )
 		);
 	}
 }
@@ -192,7 +231,7 @@ function pass_protect_all_pass_field_render( $args ) {
 		$password = '';
 	}
 
-	echo '<p>' . esc_html__( 'Make sure to set password, otherwise posts will not be (for obvious reasons) protected.', 'bulk-password-protect-post-types' ) . '</p><br>';
+	echo '<p>' . esc_html__( 'Used for every chosen post type that has no password of its own. Make sure to set a password, otherwise posts will not be (for obvious reasons) protected.', 'bulk-password-protect-post-types' ) . '</p><br>';
 
 	printf(
 		'<input type="text" id="%1$s" name="%1$s" value="%2$s" placeholder="%3$s" autocomplete="off" />',
@@ -203,7 +242,8 @@ function pass_protect_all_pass_field_render( $args ) {
 }
 
 /**
- * Gives a post the password of the setting when it belongs to one of the chosen post types.
+ * Gives a post the password of its post type, or the general one, when it belongs to one of the
+ * chosen post types.
  *
  * It runs for every post a loop, a feed, a search or the REST API sets up, so the text stays hidden
  * wherever WordPress would print it. Without a password nothing is changed, so a post's own
@@ -213,13 +253,17 @@ function pass_protect_all_pass_field_render( $args ) {
  */
 function pass_protect_all_set_password( $post_object ) {
 	$chosen_post_types = get_option( 'pass_protect_all_select_types' );
-	$post_password     = get_option( 'pass_protect_all_pass_field' );
-
-	if ( ! is_array( $chosen_post_types ) || ! is_string( $post_password ) || '' === $post_password ) {
+	if ( ! is_array( $chosen_post_types ) || ! in_array( $post_object->post_type, $chosen_post_types, true ) ) {
 		return;
 	}
 
-	if ( in_array( $post_object->post_type, $chosen_post_types, true ) ) {
+	$post_password = get_option( 'pass_protect_all_pass_field' );
+	$own_passwords = get_option( 'pass_protect_all_type_passwords' );
+	if ( is_array( $own_passwords ) && ! empty( $own_passwords[ $post_object->post_type ] ) ) {
+		$post_password = $own_passwords[ $post_object->post_type ];
+	}
+
+	if ( is_string( $post_password ) && '' !== $post_password ) {
 		$post_object->post_password = $post_password;
 	}
 }

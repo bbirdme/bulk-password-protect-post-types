@@ -18,15 +18,16 @@ Bulk Password Protect Post Types lets you choose one or more post types and set 
 
 = Features =
 
-* Lists every post type of the site, custom post types included.
+* Lists the post types your visitors can see, custom post types included, by the names the admin menu uses.
 * One password for all posts of the chosen types, set in one place.
+* Or a password of its own for a post type, when you want different ones.
 * Uses WordPress's own password protection, so the form and the cookie behave as they do for a single protected post.
 * Posts you add later to a chosen type are protected from the first moment.
 
 = Good to know =
 
 * The password is saved in the site's database as plain text, as WordPress saves the password of a single post. Do not use one you use elsewhere.
-* The password of this setting replaces the password a post had of its own, for the post types you chose. Without a password in the setting, nothing is changed.
+* The password of the setting replaces the password a post had of its own, for the post types you chose. A post type without a password, its own or the general one, is left as it is.
 * Nothing is written to the posts themselves. Remove a post type from the setting, or deactivate the plugin, and its posts are open again.
 
 == Installation ==
@@ -44,11 +45,15 @@ No. The password is applied when a post is loaded, and it is never saved to the 
 
 = Can I use a different password for each post type? =
 
-Not yet. All chosen post types share one password.
+Yes. Type it in the field next to the post type. A post type without a password of its own uses the general password below the list.
 
-= Why does the post type list show names like "wp_block"? =
+= A post type I use is not in the list. =
 
-It lists every post type WordPress knows, with its internal name. Choose the ones your visitors see, usually "post", "page" and your own custom post types.
+The list shows post types visitors can see ("public" ones). A type that WordPress or a plugin keeps for itself, such as menu items or reusable blocks, is not offered. A type you chose with version 1.0 stays in the list.
+
+= Does it work on a multisite network? =
+
+Yes, each site has its own settings. Deleting the plugin removes the settings of every site.
 
 == Screenshots ==
 
@@ -57,6 +62,9 @@ It lists every post type WordPress knows, with its internal name. Choose the one
 == Changelog ==
 
 = 1.1.0 =
+* New: a post type can have a password of its own.
+* New: the list offers the post types visitors can see, as "Posts (post)", instead of every internal type. A type chosen earlier stays listed.
+* Fixed: deleting the plugin on a network removes the settings of every site, not only the main one.
 * Fixed: the settings page ended in a fatal error on PHP 8.
 * Fixed: a chosen post type with an empty password removed the passwords posts had of their own. Now nothing changes until a password is set.
 * Security: the chosen post types and the password are sanitized when saved, and everything on the settings page is escaped.

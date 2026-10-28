@@ -166,4 +166,52 @@ class ProtectionTest extends TestCase {
 		$page = rest_do_request( new WP_REST_Request( 'GET', '/wp/v2/pages/' . $page_id ) )->get_data();
 		$this->assertStringContainsString( 'OPEN-BODY', $page['content']['rendered'] );
 	}
+
+	/**
+	 * A post type with a password of its own asks for that one, and the others keep the general one.
+	 */
+	public function test_a_post_type_can_have_its_own_password() {
+		list( $post_id, $page_id ) = $this->content();
+		$this->protect( array( 'post', 'page' ) );
+		$this->own_passwords( array( 'page' => 'pages-only' ) );
+
+		$this->assertSame( self::PASSWORD, $this->open( $post_id )->post_password, 'A post uses the general password.' );
+		$this->assertSame( 'pages-only', $this->open( $page_id )->post_password, 'A page uses its own.' );
+
+		$this->visitor_typed( self::PASSWORD );
+		$this->open( $page_id );
+		$this->assertTrue( post_password_required(), 'The general password does not open a page.' );
+
+		$this->visitor_typed( 'pages-only' );
+		$this->open( $page_id );
+		$this->assertFalse( post_password_required() );
+	}
+
+	/**
+	 * A type with a password of its own is protected even when there is no general password.
+	 */
+	public function test_own_password_needs_no_general_password() {
+		list( $post_id, $page_id ) = $this->content();
+		$this->protect( array( 'post', 'page' ), '' );
+		$this->own_passwords( array( 'page' => 'pages-only' ) );
+
+		$this->open( $post_id );
+		$this->assertFalse( post_password_required(), 'A post has no password at all.' );
+
+		$this->open( $page_id );
+		$this->assertTrue( post_password_required() );
+	}
+
+	/**
+	 * A password of its own does nothing for a type that was not chosen.
+	 */
+	public function test_own_password_of_an_unchosen_type_does_nothing() {
+		list( , $page_id ) = $this->content();
+		$this->protect( array( 'post' ) );
+		$this->own_passwords( array( 'page' => 'pages-only' ) );
+
+		$this->open( $page_id );
+
+		$this->assertFalse( post_password_required() );
+	}
 }

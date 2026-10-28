@@ -51,6 +51,15 @@ abstract class TestCase extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Gives post types a password of their own, as the settings screen saves them.
+	 *
+	 * @param array<string, string> $passwords Password by post type name.
+	 */
+	protected function own_passwords( array $passwords ) {
+		update_option( 'pass_protect_all_type_passwords', $passwords );
+	}
+
+	/**
 	 * Makes the visitor's browser send the cookie WordPress sets after a correct password.
 	 *
 	 * @param string $password What the visitor typed.
